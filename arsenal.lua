@@ -1,59 +1,68 @@
--- Arsenal Mod Menu (Auto Win / Auto Kill / ESP / Touch UI)
+-- Arsenal Mod Menu Android (Interfaz clara y botones visibles)......
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
-
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Estados de funciones
 local settings = {
+    esp = false,
     autoKill = false,
     autoPlay = false,
-    esp = false
 }
 
--- GUI
+-- Crear GUI
 local screenGui = Instance.new("ScreenGui", PlayerGui)
 screenGui.ResetOnSpawn = false
-screenGui.Name = "ArsenalModMenu"
+screenGui.Name = "ArsenalMod"
 
-local mainButton = Instance.new("TextButton", screenGui)
-mainButton.Size = UDim2.new(0, 50, 0, 50)
-mainButton.Position = UDim2.new(0, 10, 0.5, -25)
-mainButton.Text = "≡"
-mainButton.BackgroundColor3 = Color3.new(0, 0, 0)
-mainButton.TextColor3 = Color3.new(1, 1, 1)
-mainButton.TextScaled = true
-mainButton.ZIndex = 10
+-- Botón principal
+local mainBtn = Instance.new("TextButton", screenGui)
+mainBtn.Size = UDim2.new(0, 50, 0, 50)
+mainBtn.Position = UDim2.new(0, 10, 0.5, -25)
+mainBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
+mainBtn.Text = "≡"
+mainBtn.TextColor3 = Color3.fromRGB(255,255,255)
+mainBtn.TextScaled = true
+mainBtn.ZIndex = 10
 
+-- Menú contenedor
 local frame = Instance.new("Frame", screenGui)
-frame.Size = UDim2.new(0, 180, 0, 180)
+frame.Size = UDim2.new(0, 200, 0, 180)
 frame.Position = UDim2.new(0, 70, 0.5, -90)
+frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+frame.BorderSizePixel = 0
 frame.Visible = false
-frame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
 frame.ZIndex = 9
 
-function createToggle(name, posY, callback)
+-- Crear botón
+local function makeBtn(name, y)
     local btn = Instance.new("TextButton", frame)
-    btn.Size = UDim2.new(1, -20, 0, 40)
-    btn.Position = UDim2.new(0, 10, 0, posY)
-    btn.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Size = UDim2.new(1, -20, 0, 43)
+    btn.Position = UDim2.new(0, 10, 0, y)
+    btn.BackgroundColor3 = Color3.fromRGB(80,80,80)
+    btn.TextColor3 = Color3.fromRGB(240,240,240)
+    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 18
     btn.Text = name .. ": OFF"
-    btn.TextScaled = true
     btn.MouseButton1Click:Connect(function()
         settings[name] = not settings[name]
         btn.Text = name .. ": " .. (settings[name] and "ON" or "OFF")
-        callback(settings[name])
     end)
+    return btn
 end
 
-mainButton.MouseButton1Click:Connect(function()
+local espBtn     = makeBtn("esp",      10)
+local killBtn    = makeBtn("autoKill", 60)
+local playBtn    = makeBtn("autoPlay", 110)
+
+-- Toggle menú con el botón principal
+mainBtn.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
 end)
 
--- ESP
+-- <ESP>
 local function createESP(player)
     if player == LocalPlayer then return end
     local box = Drawing.new("Square")
@@ -68,8 +77,8 @@ local function createESP(player)
             if onScreen then
                 local dist = (player.Character.HumanoidRootPart.Position - Camera.CFrame.Position).Magnitude
                 local size = 50 / dist
-                box.Size = Vector2.new(size * 2, size * 3)
-                box.Position = Vector2.new(pos.X - size, pos.Y - size * 1.5)
+                box.Size = Vector2.new(size*2, size*3)
+                box.Position = Vector2.new(pos.X - size, pos.Y - size*1.5)
                 box.Visible = true
             else
                 box.Visible = false
@@ -91,10 +100,10 @@ Players.PlayerAdded:Connect(function(p)
     end)
 end)
 
--- Auto Kill
+-- <Auto Kill>
 spawn(function()
     while true do
-        task.wait(0.3)
+        task.wait(0.4)
         if settings.autoKill then
             for _, p in pairs(Players:GetPlayers()) do
                 if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character and p.Character:FindFirstChild("Humanoid") then
@@ -105,21 +114,17 @@ spawn(function()
     end
 end)
 
--- Auto Play (bot simple)
+-- <Auto Play>
 spawn(function()
     while true do
         task.wait(0.5)
         if settings.autoPlay and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
             for _, p in pairs(Players:GetPlayers()) do
                 if p ~= LocalPlayer and p.Team ~= LocalPlayer.Team and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + Vector3.new(0, 0, -3)
+                    local targetCFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-2)
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = targetCFrame
                 end
             end
         end
     end
 end)
-
--- Crear botones
-createToggle("esp", 10, function(_) end)
-createToggle("autoKill", 55, function(_) end)
-createToggle("autoPlay", 100, function(_) end)
